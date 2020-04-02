@@ -1,0 +1,82 @@
+﻿
+
+@model IEnumerable<EmployeeManagement.Models.Adventurework.DemoScrollingPaging.Employee>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+<span id="windowHeight"></span> | | <span id="documentHeight"></span>
+<table id="ctlTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Title</th>
+            <th>Hire Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var employee in Model)
+        {
+        <tr>
+            <td>@employee.EmployeeKey</td>
+            <td>@employee.FirstName</td>
+            <td>@employee.LastName</td>
+            <td>@employee.Title</td>
+            <td>@employee.HireDate</td>
+        </tr>
+
+        }
+
+    </tbody>
+</table>
+@section Scripts{ 
+    <script type="text/javascript">
+
+        $(function () {
+            var currentPageNumber = 1;
+
+            $(window).scroll(function () {
+
+                if ($(window).scrollTop() == $(document).height() - $(window).height()) {
+
+                    //load data
+                    var documentHeight = $(document).height();
+                    var windowheight = $(window).height();
+
+                    $("#windowHeight").text(windowheight);
+                    $("#documentHeight").text(documentHeight);
+
+                    currentPageNumber += 1;
+                    loadData(currentPageNumber);
+                }
+
+            });
+
+
+            function loadData(currentPage) {
+                $.ajax({
+                    url: "AdventureWork/GetScrollingPage",
+                    method: "post",
+                    data: {pageNumber: currentPage},
+                    success: function (data) {
+                        var table = $("#ctlTable tbody");
+                        console.log(data);
+                        //note the data coming back from the server is in json camelcase!!!
+                        $.each(data, function (index, value) {
+                            table.append('<tr><td>' + value.employeeKey + '</td><td>' + value.firstName + '</td><td>' + value.lastName + '</td><td>' + value.title + '</td><td>' + value.hireDate + '</td></tr>');
+                        });
+                       
+
+                    }
+
+                });
+            }
+          
+
+        });
+    </script>
+}

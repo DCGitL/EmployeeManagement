@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <script src="lib/jquery/jquery.js"></script>
+    <style>
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="text-center">Hello from default Page</h1>
+
+    <div class="form-group">
+
+        <div class="row">
+            <div class="col-md-3">
+
+            </div>
+            <div class="col-md-3 ">
+
+                <label for="username" class="form-control">UserName</label>
+            </div>
+            <div class="col-md-3">
+                <input class="form-control" type="text" id="username" />
+            </div>
+
+        </div>
+        <div class="row">
+
+            <div class="col-md-3 offset-md-3 ">
+
+                <label for="password" class="form-control">password</label>
+            </div>
+            <div class="col-md-3">
+                <input class="form-control" type="password" id="password" />
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="form-group offset-md-3">
+                <button style="margin-left:15px" type="button" id="btnLogin">Login</button>
+                <span id="loginloading"  style="display:none"  >Loading .......</span>
+
+                <div style="margin-left:15px" class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="defaultUnchecked">
+                    <label class="custom-control-label" for="defaultUnchecked">Default Csv unchecked</label>
+
+                </div>
+
+            </div>
+
+        </div>
+        <div class="row">
+            <div id="downloadlinkcsv" class="form-group offset-md-3">
+                <button style="margin-left:15px; display:none" class="btn btn-primary" type="button" id="btnDowloadcsv">Dowload csv</button>
+                <span id="downloadloading" style="display:none">Loading .......</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group offset-md-3">
+                <table class="table table-striped" >
+                    <thead class="thead-light" >
+                       <tr id="tableHead">
+
+                       </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        
+                    </tbody>
+                </table>
+
+            </div>  
+
+        </div>
+        <p>
+            <label style="display:none;" id="token"></label>
+        </p>
+        
+       
+
+
+
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            var urlbaseAddress = "http://corethreeoneapi.com"
+            var loginurl = urlbaseAddress + "/api/v2.2/Auth/Login";
+            var csvurldownload = urlbaseAddress + "/api/v3.1/Employee/GetJsonString";  // "/api/v3.1/Employee/GetEmployeesJsXmlCsv";
+            var employees = new Array();
+
+            $("#btnLogin").click(function () {
+                $('#loginloading').show();
+                var username = $('#username').val();
+                var password = $('#password').val();
+                //  alert(username + " " + password);
+                var _data = { 'userName': username, 'password': password };
+
+                console.log(JSON.stringify(_data));
+                $.ajax({
+                    method: "POST",
+                    data: JSON.stringify(_data),
+                    url: loginurl,
+                    headers: { 'content-type': 'application/json', 'Accept': 'application/json' },
+                    success: function (results) {
+                        sessionStorage.setItem('accessToken', results.accessToken);
+                        $("#token").text(results.accessToken);
+                        $("#btnDowloadcsv").show();
+                        $('#loginloading').hide();
+                        console.log(results);
+                    },
+                    error: function (jqXHR) {
+                        console.log(jqXHR.responseText);
+                    }
+
+                });
+
+            });
+
+
+            $("#defaultUnchecked").click(function () {
+                var btn = $("#btnDowloadcsv");
+                if ($(this).prop('checked')) {
+                   // alert("I am checked");
+                    btn.text("Get Json Employees");
+                    console.log("I am checked");
+                }
+                else {
+                   // alert("I am not checked");
+                    btn.text("Default Csv unchecked");
+                    console.log("I am not checked");
+                }
+
+            });
+
+            $("#btnDowloadcsv").click(function () {
+                var $downloadlink = $("#downloadlinkcsv");
+
+                $('#downloadloading').show();
+                var selectedContentTypechecked = $("#defaultUnchecked").prop('checked');
+                var accepttype = 'text/csv';
+                if (selectedContentTypechecked) {
+                    accepttype = 'application/json'; // 'text/csv' 'application/json'
+                }
+                var accessToken = sessionStorage.getItem('accessToken');
+                $.ajax({
+                    method: "GET",
+                    url: csvurldownload,
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
+                    headers: { 'Authorization': 'Bearer ' + accessToken, 'Accept': accepttype },
+                    success: function (results, status, xhr) {
+                        console.log("response data: ", results);
+                        console.log('status :', status);
+                        if (accepttype == 'text/csv') {
+
+                            var downloadlink = document.createElement("a");
+                            var blob = new Blob(["\ufeff", results]);
+                            var url = URL.createObjectURL(blob);
+                            downloadlink.href = url;
+                            downloadlink.download = "myemployee.csv";
+                            $downloadlink.append(downloadlink);
+                            downloadlink.click();
+                            getfilename(xhr);
+                            $downloadlink.remove(downloadlink);
+                        }
+                        else {
+                            var counter = 0;
+                            var $th = $("#tableHead");
+                            var $tr = $('#tableBody');
+                            $(results.splunkdata).each(function (idx, obj) {  
+                                if (counter == 0) {
+                                    createTableHeader($th, obj);
+                                }  
+                                var rowdcount = 0;
+                               
+                                var trstr = "";
+                                $.each(obj, function (key, value) {
+                                    if (rowdcount == 0) {
+                                        trstr += '<th scope="row">' + value + '</td>';
+                                    } else {
+                                        trstr += '<td>' + value + '</td>';
+                                    }
+                                    rowdcount++;
+                                      console.log(key + ": " + value);
+                                });
+                               $tr.append('<tr>'+trstr + '</tr>');
+                                counter++;
+                            });
+                           // console.log(results.employees);
+                        }
+                        $('#downloadloading').hide();
+
+                    },
+                    error: function (jqXHR) {
+                        console.log(jqXHR.responseText);
+                    }
+
+
+                });
+            });
+
+
+            function getfilename(xhr) {
+
+                console.log('xhr object: ', xhr);
+                var disposition = xhr.getResponseHeader('content-disposition');
+                if (disposition && disposition.indexOf('attachment') !== 1) {
+                    console.log('disposition value: ', disposition);
+                }
+            }
+
+            function createTableHeader($th, obj) {
+                $.each(obj, function (key, value) {
+                   $th.append("<th scope='col'>" + key + "</th>")
+                });
+            }
+
+           
+        });
+
+    </script>
+</body>
+
+
+</html>
+
