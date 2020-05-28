@@ -30,6 +30,7 @@ namespace EmployeeManagement
             services.AddTransient<IAdventureWorksRepository>(s => new AdventureWorksRepository(adventureworksConnectionStr));
 
             services.AddInstallerServices(_config);
+            services.AddHttpClient();
 
         }
 

@@ -158,7 +158,7 @@
                     crossDomain: true,
                     headers: { 'Authorization': 'Bearer ' + accessToken, 'Accept': accepttype },
                     success: function (results, status, xhr) {
-                        console.log("response data: ", results);
+                        console.log("response data: ", results.splunkData);
                         console.log('status :', status);
                         if (accepttype == 'text/csv') {
 
@@ -176,7 +176,7 @@
                             var counter = 0;
                             var $th = $("#tableHead");
                             var $tr = $('#tableBody');
-                            $(results.splunkdata).each(function (idx, obj) {  
+                            $(results.splunkData).each(function (idx, obj) {  
                                 if (counter == 0) {
                                     createTableHeader($th, obj);
                                 }  
