@@ -1,4 +1,7 @@
-﻿using EmployeeManagement.Services;
+﻿using AutoMapper;
+using EmployeeManagement.AutoMapperProfile;
+using EmployeeManagement.PartialRender;
+using EmployeeManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -22,7 +25,16 @@ namespace EmployeeManagement.ServiceConfigurationInstaller.ServicesToInstall
 
             //  services.AddMvc().AddXmlSerializerFormatters();
             services.AddCustomServices();
+            services.AddScoped<IPartialRenderService, PartialRenderService>();
 
+            // Auto mapper configuration
+            var mappingConfig = new MapperConfiguration(c =>
+            {
+                c.AddProfile(new MapperProfile());
+            });
+
+            IMapper mapper = mappingConfig.CreateMapper();
+            services.AddSingleton(mapper);
         }
     }
 }

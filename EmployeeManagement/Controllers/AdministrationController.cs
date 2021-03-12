@@ -1,4 +1,6 @@
-﻿using EmployeeManagement.Models;
+﻿using AutoMapper;
+using EmployeeManagement.Models;
+using EmployeeManagement.PartialRender;
 using EmployeeManagement.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,23 +22,31 @@ namespace EmployeeManagement.Controllers
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly UserManager<ApplicationUser> userManager;
         private readonly ILogger<AdministrationController> logger;
+        private readonly IPartialRenderService partialRenderService;
+        private readonly IMapper mapper;
 
         public AdministrationController(RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager,
-            ILogger<AdministrationController> logger)
+            ILogger<AdministrationController> logger,
+            IPartialRenderService partialRenderService, IMapper mapper)
         {
             this.roleManager = roleManager;
             this.userManager = userManager;
             this.logger = logger;
+            this.partialRenderService = partialRenderService;
+            this.mapper = mapper;
         }
 
         [HttpGet]
-        public IActionResult ListUsers()
+        public async Task<IActionResult> ListUsers()
         {
+               
+            var users = await userManager.Users.ToListAsync();
+            var model = mapper.Map<List<UserViewModel>>(users);  
+            
+           // string html = await partialRenderService.RenderToStringAsync("Administration/ListUsers", model);
 
-            var users = userManager.Users;
-
-            return View(users);
+            return View(model);
         }
         [HttpGet]
         public IActionResult CreateRole()
@@ -464,7 +474,7 @@ namespace EmployeeManagement.Controllers
                 model.Claims.Add(userClaim);
 
             }
-           
+            string html = await partialRenderService.RenderToStringAsync("Administration/ManageUserClaims", model);
 
             return View(model);
         }
