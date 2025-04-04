@@ -1,37 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using EmployeeManagement.Models;
+﻿using EmployeeManagement.Models;
 using EmployeeManagement.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
 
 namespace EmployeeManagement.Controllers
 {
     
-    public class HomeController : Controller
+    public class HomeController(
+        IEmployeeRepository employeeRepository, 
+        IWebHostEnvironment hostingEnvironment, 
+        ILogger<HomeController> logger) : Controller
     {
-        private readonly IEmployeeRepository _employeeRepository;
-        private readonly IHostingEnvironment hostingEnvironment;
-        private readonly ILogger<HomeController> logger;
-
-        public HomeController(IEmployeeRepository employeeRepository, IHostingEnvironment hostingEnvironment, ILogger<HomeController> logger)
-        {
-            _employeeRepository = employeeRepository;
-            this.hostingEnvironment = hostingEnvironment;
-            this.logger = logger;
-        }
-
         [AllowAnonymous]
         public ViewResult Index()
         {
            
 
-            var viewModel = _employeeRepository.GetAllEmployees();
+            var viewModel = employeeRepository.GetAllEmployees();
+            logger.LogInformation("Index method called");
             return View(viewModel);
         }
 
@@ -49,7 +39,7 @@ namespace EmployeeManagement.Controllers
            
             HomeDetailsViewModel viewModel = new HomeDetailsViewModel
             {
-                Employee = _employeeRepository.GetEmployee(id ?? 1),
+                Employee = employeeRepository.GetEmployee(id ?? 1),
                 PageTitle = "Employee Details"
             };
 
@@ -73,7 +63,7 @@ namespace EmployeeManagement.Controllers
 
 
                 Employee employee = new Employee { Name = viewModel.Name, Department = viewModel.Department, Email = viewModel.Email, PhotoPath = uniqueFileName };
-                _employeeRepository.Add(employee);
+                employeeRepository.Add(employee);
                 return RedirectToAction("Details", new { id = employee.Id });
             }
             //  else
@@ -87,7 +77,7 @@ namespace EmployeeManagement.Controllers
      
         public IActionResult Edit(int id)
         {
-            Employee employee = _employeeRepository.GetEmployee(id);
+            Employee employee = employeeRepository.GetEmployee(id);
 
             var viewModel = new EmployeeEditViewModel
             {
@@ -105,7 +95,7 @@ namespace EmployeeManagement.Controllers
         [HttpPost]
         public IActionResult Delete(int Id)
         {
-            Employee emp = _employeeRepository.GetEmployee(Id);
+            Employee emp = employeeRepository.GetEmployee(Id);
             if (!string.IsNullOrEmpty(emp.PhotoPath))
             {
                 //delete the existing photo
@@ -114,7 +104,7 @@ namespace EmployeeManagement.Controllers
 
             }
 
-            _employeeRepository.Delete(Id);
+            employeeRepository.Delete(Id);
 
             return RedirectToAction("Index");
             
@@ -125,7 +115,7 @@ namespace EmployeeManagement.Controllers
         {
             if(ModelState.IsValid)
             {               
-                Employee emp = _employeeRepository.GetEmployee(viewModel.Id);
+                Employee emp = employeeRepository.GetEmployee(viewModel.Id);
                 if (emp != null)
                 {
                     emp.Department = viewModel.Department;
@@ -145,7 +135,7 @@ namespace EmployeeManagement.Controllers
 
                     }
 
-                    _employeeRepository.Update(emp);
+                    employeeRepository.Update(emp);
 
                     return RedirectToAction("Index");
                 }
@@ -162,7 +152,7 @@ namespace EmployeeManagement.Controllers
             {
                 foreach (var photo in viewModel.Photos)
                 {
-                    string uploadFolder = Path.Combine(this.hostingEnvironment.WebRootPath, "images");
+                    string uploadFolder = Path.Combine(hostingEnvironment.WebRootPath, "images");
                     uniqueFileName = Guid.NewGuid().ToString() + "_" + photo.FileName;
                     string filePath = Path.Combine(uploadFolder, uniqueFileName);
                     using (FileStream file = new FileStream(filePath, FileMode.Create))

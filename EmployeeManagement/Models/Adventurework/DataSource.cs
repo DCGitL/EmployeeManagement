@@ -1,12 +1,9 @@
 ﻿using EmployeeManagement.Models.Adventurework.DemoScrollingPaging;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 
 /// <summary>
 /// Summary description for DataSource

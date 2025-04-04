@@ -1,32 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using EmployeeManagement.Models;
+﻿using EmployeeManagement.Models;
 using EmployeeManagement.ViewModels;
 using MessageManager;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace EmployeeManagement.Controllers
 {
 
-    public class AccountController : Controller
+    public class AccountController(
+        UserManager<ApplicationUser> userManager, 
+        SignInManager<ApplicationUser> signInManager, 
+        ILogger<AccountController> logger, 
+        IMessageServices messageServices) : Controller
     {
-        private readonly UserManager<ApplicationUser> userManager;
-        private readonly SignInManager<ApplicationUser> signInManager;
-        private readonly ILogger<AccountController> logger;
-        private readonly IMessageServices messageServices;
-
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILogger<AccountController> logger, IMessageServices messageServices)
-        {
-            this.userManager = userManager;
-            this.signInManager = signInManager;
-            this.logger = logger;
-            this.messageServices = messageServices;
-        }
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Register()

@@ -1,32 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+﻿using EmployeeManagement.Models;
+using EmployeeManagement.Models.Adventurework.DemoScrollingPaging;
+using EmployeeManagement.ServiceConfigurationInstaller;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-namespace EmployeeManagement
+
+var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
+var adventureWorksConnectionStr = configuration.GetConnectionString("AdventureWork");
+// Add services to the container.
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+
+
+
+builder.Services.Configure<IISServerOptions>(options =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateWebHostBuilder(args).Build().Run();
-        }
+    options.AutomaticAuthentication = false;
+});
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-             .ConfigureLogging((hostingContext, logging) =>
-             {
-                 logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                 logging.AddConsole();
-                 logging.AddDebug();
-                 logging.AddEventSourceLogger();
-                 logging.AddNLog();
-             }).UseStartup<Startup>();
-    }
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.AutomaticAuthentication = false;
+});
+var employeeConnectionString = configuration.GetConnectionString("EmployeeDBConnection");
+builder.Services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer(employeeConnectionString));
+builder.Services.AddTransient<IAdventureWorksRepository>(s => new AdventureWorksRepository(adventureWorksConnectionStr));
+
+builder.Services.AddInstallerServices(configuration);
+builder.Services.AddHttpClient();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+
+    app.UseDeveloperExceptionPage();
 }
+else
+{
+    // app.UseStatusCodePagesWithRedirects("/Error/{0}");
+    app.UseStatusCodePagesWithReExecute("/Error/{0}");
+    app.UseExceptionHandler("/Error");
+
+}
+
+app.UseStaticFiles();
+// app.UseMvcWithDefaultRoute();
+app.UseAuthentication();
+
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Run();
+
+
+
+
+
+
