@@ -14,9 +14,9 @@
             </div>
             <div class="card-body text-center">
                 <img class="card-img-top" src="@photoPath" asp-append-version="true" style="width:300px; height:200px" />
-                <h4>Employee ID: @Model.Employee.Id</h4>
-                <h4>Employee ID: @Model.Employee.Email</h4>
-                <h4>Employee ID: @Model.Employee.Department</h4>
+                <input type="hidden" id="employeeId" value="@Model.Employee.Id" />
+                <h4>Employee Email: @Model.Employee.Email</h4>
+                <h4>Employee Department: @Model.Employee.Department</h4>
             </div>
             <div class="card-footer text-center">
                 <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back</a>
@@ -30,9 +30,9 @@
 <h2 class="text-center">Employee ViewComponent</h2>
 
  <div id="viewcomponent">
-     @await Component.InvokeAsync("Employee", new { id = Model.Employee.Id})
+     @await Component.InvokeAsync(name:"Employee", new { id = Model.Employee.Id})
 
-     @*<vc:employee id="@Model.Employee.Id"/>*@
+     @*<vc:employee id="@Model.Employee.Id"/>*@ @*This is the short way of invoking the view component*@
 
  </div>
 
